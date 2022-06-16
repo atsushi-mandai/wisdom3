@@ -1,2 +1,2 @@
 # wisdom3
-Wisdom3 is a web3 project. We aim to share wisdom among the community participants and return the profits generated from it to the community fairly.
+Wisdom3 is a web3 project. Our goal is to encourage community participants to share their knowledge and earn a fair profit from their knowledge.
