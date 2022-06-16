@@ -16,6 +16,8 @@ In addition, Wisdom3 members can participate in this project not only by writing
 
 Through the above mechanism, even members who have difficulty writing good annotations by themselves will be encouraged to support sharing of better annotations with many members.
 
+Posting honest and proactive annotations and voting for good annotations by community members will increase the value of the ecosystem and the economic value of the WSDM token rewards they receive.
+
 
 # wisdom3（日本語）
 
@@ -34,3 +36,5 @@ Wisdom3の基本的な仕組みは、以下の通りです。
 3. WSDMトークンをステーキングしたメンバーは、そのアノテーションへの分配の一部を受け取ることができます。
 
 以上の仕組みを通じて、自ら良質なアノテーションを記述することが難しいメンバーであっても、より良いアノテーションが多くのメンバーに共有されることをサポートすることを後押しされます。
+
+コミュニティメンバーによる、誠実で積極的なアノテーションの投稿、良質なアノテーションへの投票は、エコシステムの価値を高め、彼らが受け取るWSDM建て報酬の経済的価値を高めることに繋がります。
