@@ -13,8 +13,8 @@ contract Wisdom3Token is ERC20Capped {
     /** 
     * @dev ERC20 Token for Wisdom3 is "Wisdom3" and its ticker is "WSDM".
     * max supply of the token will be 100,000,000.
-    * Founder takes 10% of the max supply as an incentive, 
-    * and the remaining tokens will be minted through a non-arbitrary algorithm.
+    * Founder takes 10% of the max supply as an incentive for him and early collaborators.
+    * All the remaining tokens will be minted through a non-arbitrary algorithm.
     */
     constructor () ERC20 ("Wisdom3", "WSDM") ERC20Capped(100000000 * (10**uint256(18)))
     {
