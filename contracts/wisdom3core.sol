@@ -10,5 +10,37 @@ import "./access/Ownable.sol";
 /// @author Atsushi Mandai
 /// @notice Basic functions of the Wisdome3 will be written here.
 contract Wisdom3Core is Wisdom3Token, Ownable {
+
+    event AnnotationCreated(uint annotationId, string url, string body, string languageCode);
     
+    /**
+    * @dev "annotation" is the basic structure of Wisdom3.
+    * Each annotation should be made to a specific URL to add an annottation
+    * to the content on the web.
+    * For languageCode, ISO 639-1 should be used. 
+    */
+    struct annotation {
+        string url;
+        string body;
+        string languageCode;
+        address author;
+    }
+    annotation[] annotations;
+
+    /**
+    * @dev Each annotation could be staked with WSDM.
+    * Annotation with more stakes of WSDM are considered more valuable annotation.
+    * Therefore, it will be displayed preferentially, and the author & curator of it will receive more rewards.
+    */
+    mapping (uint => uint) public annotationToStake;
+
+    /**
+    * @dev "createAnnotation" lets anyone to create an annotation.
+    */
+    function createAnnotation(string memory _url, string memory _body, string memory _languageCode) public {
+        annotations.push(annotation(_url, _body, _languageCode, _msgSender()));
+        uint annotationId = annotations.length - 1;
+        annotationToStake[annotationId] = 0;
+        emit AnnotationCreated(annotationId, _url, _body, _languageCode);
+    }
 }
