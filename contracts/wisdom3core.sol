@@ -25,14 +25,19 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         string languageCode;
         address author;
     }
-    annotation[] annotations;
+    annotation[] internal annotations;
 
     /**
     * @dev Each annotation could be staked with WSDM.
     * Annotation with more stakes of WSDM are considered more valuable annotation.
     * Therefore, it will be displayed preferentially, and the author & curator of it will receive more rewards.
     */
-    mapping (uint => uint) public annotationToStake;
+    struct annotationStake {
+        uint annotationId;
+        address curatorAddress;
+        uint stakeAmount;
+    }
+    annotationStake[] public annotationStakes;
 
     /**
     * @dev "createAnnotation" lets anyone to create an annotation.
@@ -40,7 +45,6 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     function createAnnotation(string memory _url, string memory _body, string memory _languageCode) public {
         annotations.push(annotation(_url, _body, _languageCode, _msgSender()));
         uint annotationId = annotations.length - 1;
-        annotationToStake[annotationId] = 0;
         emit AnnotationCreated(annotationId, _url, _body, _languageCode);
     }
 }
