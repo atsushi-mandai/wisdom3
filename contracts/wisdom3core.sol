@@ -57,6 +57,9 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     /**
     * @dev changeBasicFee function lets contract owner to change the basicFee.
     * Owner of the contract will be transfered to the community in the future.
+    * If few readers pay WSDM to read the annotations, the basic fee should be reduced to stimulate demand.
+    * Conversely, if many readers pay WSDM to read the annotations, the community could conversely raise the 
+    * basicFee to encourage readers to buy more WDSM. 
     */
     function changeBasicFee(uint _newBasicFee) public onlyOwner {
         basicFee = _newBasicFee;
