@@ -65,5 +65,10 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         basicFee = _newBasicFee;
     }  
 
+    /**
+    * @dev getAnnotation function is for readers to get annotations.
+    * reader could select how many annotations they want to read.
+    function getAnnotations()
+    */
     
 }
