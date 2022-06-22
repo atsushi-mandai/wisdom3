@@ -5,7 +5,7 @@ Wisdom3 is a Web3 project. The purpose of this project is to ensure that all com
 The basic mechanism of Wisdom3 is as follows.
 1. Any member can comment annotations/explanations on any web pages (URLs).
 2. If a web page visitor wants to know more about the content, they can pay the WSDM token to read the annotations associated with the content.
-3. The paid WSDM tokens will be properly distributed to the users who have annotated their content.
+3. The paid WSDM tokens will be properly distributed to the users who have annotated the content.
 
 Through these mechanisms, knowledgeable members are encouraged to add their own knowledge to various content on the web and help community participants to better understand the content.
 
