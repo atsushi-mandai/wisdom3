@@ -11,7 +11,24 @@ import "./access/Ownable.sol";
 /// @notice Basic functions of the Wisdome3 will be written here.
 contract Wisdom3Core is Wisdom3Token, Ownable {
 
+    /**
+    *
+    *
+    * Events of Wisdom3Core
+    *
+    *
+    */
+
     event AnnotationCreated(uint annotationId, string url, string body, string languageCode);
+
+
+    /**
+    *
+    *
+    * Variables of Wisdom3Core
+    *
+    *
+    */
 
     /**
     * @dev basicFee is used to determine the amount of WSDM paid
@@ -48,15 +65,14 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     }
     annotationStake[] public annotationStakes;
 
+
     /**
-    * @dev "createAnnotation" lets anyone to create an annotation.
+    *
+    *
+    * Public / External functions of Wisdom3Core
+    *
+    *
     */
-    function createAnnotation(string memory _url, string memory _body, string memory _languageCode) public {
-        annotations.push(annotation(_url, _languageCode, _msgSender(), 0));
-        uint annotationId = annotations.length - 1;
-        annotationBody[annotationId] = _body;
-        emit AnnotationCreated(annotationId, _url, _body, _languageCode);
-    }
 
     /**
     * @dev changeBasicFee function lets contract owner to change the basicFee.
@@ -69,8 +85,14 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         basicFee = _newBasicFee;
     }  
 
-    function _stakeToAnnotation(uint _id, uint _ammount) internal {
-
+    /**
+    * @dev "createAnnotation" lets anyone to create an annotation.
+    */
+    function createAnnotation(string memory _url, string memory _body, string memory _languageCode) public {
+        annotations.push(annotation(_url, _languageCode, _msgSender(), 0));
+        uint annotationId = annotations.length - 1;
+        annotationBody[annotationId] = _body;
+        emit AnnotationCreated(annotationId, _url, _body, _languageCode);
     }
 
     /**
@@ -78,5 +100,19 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * reader could select how many annotations they want to read.
     function getAnnotations()
     */
+
+
+    /**
+    *
+    *
+    * Private / Internal functions of Wisdom3Core
+    *
+    *
+    */
+
+    function _stakeToAnnotation(uint _id, uint _ammount) internal {
+
+    }
+
     
 }
