@@ -18,7 +18,7 @@ contract Wisdom3Token is ERC20Capped {
     */
     constructor () ERC20 ("Wisdom3", "WSDM") ERC20Capped(100000000 * (10**uint256(18)))
     {
-        ERC20._mint(msg.sender,10000000 * (10**uint256(18)));
+        ERC20._mint(_msgSender(),10000000 * (10**uint256(18)));
     }
 
 }
