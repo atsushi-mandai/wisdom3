@@ -74,11 +74,24 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     */
     struct annotationStake {
         uint annotationId;
-        uint stakeAmount;
+        uint amount;
         address curatorAddress;
         uint32 withdrawAllowTime;
     }
     annotationStake[] public annotationStakes;
+
+    /*
+    *
+    *
+    * Modifiers of Wisdom3Core
+    *
+    *
+    */
+
+    modifier onlyStakeOwner(uint _stakeId) {
+        require(_msgSender() == annotationStakes[_stakeId].curatorAddress);
+        _;
+    }
 
 
     /**
@@ -115,6 +128,20 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         emit AnnotationCreated(annotationId, _url, _body, _languageCode);
     }
 
+
+    /*
+    * @dev _withdrawStake lets curator withdraw his/her staked WSDM from an annotation.
+    * A curator could only withdraw his/her stake after the minimumStakePeriod has passed.
+    * !!! better use SafeMath in this function but it doesn't work somehow.
+    */
+    function withdrawStake(uint _stakeId) public onlyStakeOwner(_stakeId) {
+        require(uint32(block.timestamp) > annotationStakes[_stakeId].withdrawAllowTime);
+        uint currentStake = annotationStakes[_stakeId].amount;
+        uint annotationId = annotationStakes[_stakeId].annotationId;
+        annotations[annotationId].totalStake = annotations[annotationId].totalStake - currentStake;
+        annotationStakes[_stakeId].amount = currentStake;
+    }
+
     /**
     * @dev getAnnotation function is for readers to get annotations.
     * reader could select how many annotations they want to read.
@@ -135,9 +162,9 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * after the transaction has been checked from several perspectives.
     * !!! better use SafeMath in this function but it doesn't work somehow.
     */
-    function _stakeToAnnotation(uint _annotationId, uint _ammount) internal {
-        annotationStakes.push(annotationStake(_annotationId, _ammount, _msgSender(), uint32(block.timestamp) + minimumStakePeriod));
-        annotations[_annotationId].totalStake = annotations[_annotationId].totalStake + _ammount;
+    function _stakeToAnnotation(uint _annotationId, uint _amount) internal {
+        annotationStakes.push(annotationStake(_annotationId, _amount, _msgSender(), uint32(block.timestamp) + minimumStakePeriod));
+        annotations[_annotationId].totalStake = annotations[_annotationId].totalStake + _amount;
     }
 
 }
