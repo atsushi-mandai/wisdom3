@@ -24,14 +24,17 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * Each annotation should be made to a specific URL to add an annottation
     * to the content on the web.
     * For languageCode, ISO 639-1 should be used. 
+    * The body of each annotation is retained in an internal mapping so that 
+    * it is only disclosed to the user who paid the WSDM for it.
     */
     struct annotation {
         string url;
-        string body;
         string languageCode;
         address author;
+        uint totalStake;
     }
-    annotation[] internal annotations;
+    annotation[] public annotations;
+    mapping(uint => string) internal annotationBody;
 
     /**
     * @dev Each annotation could be staked with WSDM.
@@ -49,8 +52,9 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * @dev "createAnnotation" lets anyone to create an annotation.
     */
     function createAnnotation(string memory _url, string memory _body, string memory _languageCode) public {
-        annotations.push(annotation(_url, _body, _languageCode, _msgSender()));
+        annotations.push(annotation(_url, _languageCode, _msgSender(), 0));
         uint annotationId = annotations.length - 1;
+        annotationBody[annotationId] = _body;
         emit AnnotationCreated(annotationId, _url, _body, _languageCode);
     }
 
@@ -64,6 +68,10 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     function changeBasicFee(uint _newBasicFee) public onlyOwner {
         basicFee = _newBasicFee;
     }  
+
+    function _stakeToAnnotation(uint _id, uint _ammount) internal {
+
+    }
 
     /**
     * @dev getAnnotation function is for readers to get annotations.
