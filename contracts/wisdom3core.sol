@@ -64,7 +64,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         uint totalStake;
     }
     annotation[] public annotations;
-    mapping(uint => string) internal annotationBody;
+    mapping(uint => string) internal annotationToBody;
 
     /**
     * @dev Each annotation could be staked with WSDM.
@@ -79,6 +79,14 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         uint32 withdrawAllowTime;
     }
     annotationStake[] public annotationStakes;
+
+    /**
+    * @dev stakeExistance is a mapping which manages whether 
+    * the curator already has an annotationStake associated with the annotation.
+    * Key of the mapping is the hash of curator's address and annotationId combined.
+    * Check _combineWithSender for detailed information.
+    */
+    mapping(bytes32 => bool) internal stakeExistance;
 
     /*
     *
@@ -124,13 +132,44 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     function createAnnotation(string memory _url, string memory _body, string memory _languageCode) public {
         annotations.push(annotation(_url, _languageCode, _msgSender(), 0));
         uint annotationId = annotations.length - 1;
-        annotationBody[annotationId] = _body;
+        annotationToBody[annotationId] = _body;
         emit AnnotationCreated(annotationId, _url, _body, _languageCode);
     }
 
+    /**
+    * @dev checkStakeExistance lets curator check if he/she already has a stake to the annotation.
+    * If he/she already has one, addStake should be used, not createStake.
+    */
+    function checkStakeExistance(uint _annotationId) public view returns(bool) {
+        return stakeExistance[_combineWithSender(_annotationId)];
+    }
 
-    /*
-    * @dev _withdrawStake lets curator withdraw his/her staked WSDM from an annotation.
+    /**
+    * @dev "createStake" lets anyone to create a stake to any annotation.
+    * Curator could only have one stake to each annotation.
+    * addStake should be used instead if the curator already has a stake to the annotation.
+    */
+    function createStake(uint _annotationId, uint _amount) public {
+        require(checkStakeExistance(_annotationId) == false);
+        //WSDM transfer function to be written here.
+        _createStake(_annotationId, _amount);
+    }
+
+    /**
+    * @dev addStake lets curator to add an additional WSDM to his/her stake.
+    * !!! better use SafeMath in this function but it doesn't work somehow.
+    */
+    function addStake(uint _stakeId, uint _amount) public onlyStakeOwner(_stakeId) {
+        //WSDM transfer function to be written here.
+        uint currentStake = annotationStakes[_stakeId].amount;
+        uint annotationId = annotationStakes[_stakeId].annotationId;
+        annotations[annotationId].totalStake = annotations[annotationId].totalStake + _amount;
+        annotationStakes[_stakeId].amount = currentStake + _amount;
+        annotationStakes[_stakeId].withdrawAllowTime = annotationStakes[_stakeId].withdrawAllowTime + minimumStakePeriod;
+    }
+
+    /**
+    * @dev withdrawStake lets curator withdraw his/her staked WSDM from an annotation.
     * A curator could only withdraw his/her stake after the minimumStakePeriod has passed.
     * !!! better use SafeMath in this function but it doesn't work somehow.
     */
@@ -140,6 +179,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         uint annotationId = annotationStakes[_stakeId].annotationId;
         annotations[annotationId].totalStake = annotations[annotationId].totalStake - currentStake;
         annotationStakes[_stakeId].amount = currentStake;
+        //WSDM transfer function to be written here.
     }
 
     /**
@@ -158,13 +198,22 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     */
 
     /**
-    * @dev _stakeToAnnotation is an internal function to be called
+    * @dev checkStakeExistance lets curator check if he/she already has a stake to the annotation.
+    * If he/she already has one, addStake should be used, not createStake.
+    */
+    function _combineWithSender(uint _annotationId) internal view returns(bytes32) {
+        return keccak256(abi.encodePacked(_msgSender(), _annotationId));
+    }
+
+    /**
+    * @dev _createStake is a private function to be called
     * after the transaction has been checked from several perspectives.
     * !!! better use SafeMath in this function but it doesn't work somehow.
     */
-    function _stakeToAnnotation(uint _annotationId, uint _amount) internal {
+    function _createStake(uint _annotationId, uint _amount) private {
         annotationStakes.push(annotationStake(_annotationId, _amount, _msgSender(), uint32(block.timestamp) + minimumStakePeriod));
         annotations[_annotationId].totalStake = annotations[_annotationId].totalStake + _amount;
+        stakeExistance[_combineWithSender(_annotationId)] = true;
     }
 
 }
