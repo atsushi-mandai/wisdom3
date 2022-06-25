@@ -36,16 +36,22 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     /**
     * @dev basicFee is used to determine the amount of WSDM paid
     * by the reader who wants to read the annotations.
-    * basicFee should be determined by a vote of governance token holders in the future
+    * basicFee should be determined by a vote of community in the future
     */
     uint basicFee = 1;
+
+    /**
+    * @dev mintPace defines the pace at which new WSDMs are mint.
+    * It is determined by community governance between 0.8 and 1.2.
+    */
+    uint8 mintPace = 100;
 
     /**
     * @dev When the curator stakes his/her WSDM to an annotation,
     * it cannot be pulled out until the minimumStakePeriod has elapsed. 
     * This prevents malicious front-end providers from proactively staking to an annotation 
     * just before it is purchased by the reader.
-    * basicFee should be determined by a vote of governance token holders in the future
+    * basicFee should be determined by a vote of community in the future
     */
     uint32 minimumStakePeriod = 30 days;
     
@@ -114,6 +120,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
 
     /**
     * @dev changeBasicFee function lets contract owner to change the basicFee.
+    * changeMintPace function lets contract owner to change the mintPace.
     * changeMiniumStakePeriod function lets contract owner to change the minimumStakePeriod.
     * Owner of the contract will be transfered to the community in the future.
     * If few readers pay WSDM to read the annotations, the basic fee should be reduced to stimulate demand.
@@ -123,6 +130,12 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     function changeBasicFee(uint _newBasicFee) public onlyOwner {
         basicFee = _newBasicFee;
     }  
+
+    function changeMintPace(uint8 _newMintPace) public onlyOwner {
+        require(_newMintPace >= 80);
+        require(_newMintPace <= 80);
+        mintPace = _newMintPace;
+    }
 
     function changeMinimumStakePeriod(uint32 _newMinimumStakePeriod) public onlyOwner {
         minimumStakePeriod = _newMinimumStakePeriod;
