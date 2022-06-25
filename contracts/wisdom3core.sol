@@ -42,7 +42,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
 
     /**
     * @dev mintPace defines the pace at which new WSDMs are mint.
-    * It is determined by community governance between 0.8 and 1.2.
+    * It is determined by community governance between 80% and 120%.
     */
     uint8 mintPace = 100;
 
@@ -229,6 +229,22 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         annotationStakes.push(annotationStake(_annotationId, _amount, _msgSender(), uint32(block.timestamp) + minimumStakePeriod));
         annotations[_annotationId].totalStake = annotations[_annotationId].totalStake + _amount;
         stakeExistance[_combineWithSender(_annotationId)] = true;
+    }
+
+    /**
+    * @dev _mintByAnnotate is called from within the createAnnotation function.
+    * It issues new WSDM and sends it to the annotation creator.
+    */
+    function _mintByAnnotate() internal {
+        //mint and send function here
+    }
+
+    /**
+    * @dev _mintForCurator is called from within the ***** function.
+    * It issues new WSDM and sends it to the curator when the annotation is purchased.
+    */
+    function _mintForCurator() internal {
+        //mint and send function here
     }
 
 }
