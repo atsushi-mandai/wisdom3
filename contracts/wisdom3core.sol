@@ -63,14 +63,14 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * The body of each annotation is retained in an internal mapping so that 
     * it is only disclosed to the user who paid the WSDM for it.
     */
-    struct annotation {
+    struct Annotation {
         string url;
         string abst;
         string languageCode;
         address author;
         uint totalStake;
     }
-    annotation[] public annotations;
+    Annotation[] public annotations;
     mapping(uint => string) internal annotationToBody;
 
     /**
@@ -79,13 +79,13 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * Therefore, it will be displayed preferentially, 
     * and the author & curator of it will receive more rewards.
     */
-    struct annotationStake {
+    struct Stake {
         uint annotationId;
         uint amount;
         address curatorAddress;
         uint32 withdrawAllowTime;
     }
-    annotationStake[] public annotationStakes;
+    Stake[] public stakes;
 
     /**
     * @dev stakeExistance is a mapping which manages whether 
@@ -105,7 +105,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     */
 
     modifier onlyStakeOwner(uint _stakeId) {
-        require(_msgSender() == annotationStakes[_stakeId].curatorAddress);
+        require(_msgSender() == stakes[_stakeId].curatorAddress);
         _;
     }
 
@@ -145,7 +145,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * @dev "createAnnotation" lets anyone to create an annotation.
     */
     function createAnnotation(string memory _url, string memory _abst, string memory _body, string memory _languageCode) public {
-        annotations.push(annotation(_url, _abst, _languageCode, _msgSender(), 0));
+        annotations.push(Annotation(_url, _abst, _languageCode, _msgSender(), 0));
         uint annotationId = annotations.length - 1;
         annotationToBody[annotationId] = _body;
         emit AnnotationCreated(annotationId, _url, _body, _languageCode);
@@ -176,11 +176,11 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     */
     function addStake(uint _stakeId, uint _amount) public onlyStakeOwner(_stakeId) {
         //WSDM transfer function to be written here.
-        uint currentStake = annotationStakes[_stakeId].amount;
-        uint annotationId = annotationStakes[_stakeId].annotationId;
+        uint currentStake = stakes[_stakeId].amount;
+        uint annotationId = stakes[_stakeId].annotationId;
         annotations[annotationId].totalStake = annotations[annotationId].totalStake + _amount;
-        annotationStakes[_stakeId].amount = currentStake + _amount;
-        annotationStakes[_stakeId].withdrawAllowTime = annotationStakes[_stakeId].withdrawAllowTime + minimumStakePeriod;
+        stakes[_stakeId].amount = currentStake + _amount;
+        stakes[_stakeId].withdrawAllowTime = stakes[_stakeId].withdrawAllowTime + minimumStakePeriod;
     }
 
     /**
@@ -189,11 +189,11 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * !!! better use SafeMath in this function but it doesn't work somehow.
     */
     function withdrawStake(uint _stakeId) public onlyStakeOwner(_stakeId) {
-        require(uint32(block.timestamp) > annotationStakes[_stakeId].withdrawAllowTime);
-        uint currentStake = annotationStakes[_stakeId].amount;
-        uint annotationId = annotationStakes[_stakeId].annotationId;
+        require(uint32(block.timestamp) > stakes[_stakeId].withdrawAllowTime);
+        uint currentStake = stakes[_stakeId].amount;
+        uint annotationId = stakes[_stakeId].annotationId;
         annotations[annotationId].totalStake = annotations[annotationId].totalStake - currentStake;
-        annotationStakes[_stakeId].amount = currentStake;
+        stakes[_stakeId].amount = currentStake;
         //WSDM transfer function to be written here.
     }
 
@@ -226,7 +226,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * !!! better use SafeMath in this function but it doesn't work somehow.
     */
     function _createStake(uint _annotationId, uint _amount) private {
-        annotationStakes.push(annotationStake(_annotationId, _amount, _msgSender(), uint32(block.timestamp) + minimumStakePeriod));
+        stakes.push(Stake(_annotationId, _amount, _msgSender(), uint32(block.timestamp) + minimumStakePeriod));
         annotations[_annotationId].totalStake = annotations[_annotationId].totalStake + _amount;
         stakeExistance[_combineWithSender(_annotationId)] = true;
     }
@@ -236,6 +236,14 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * It issues new WSDM and sends it to the annotation creator.
     */
     function _mintByAnnotate() internal {
+        //mint and send function here
+    }
+
+    /**
+    * @dev _mintWhenStaked is called from within the createStake function.
+    * It issues new WSDM and sends it to the author of the annotation.
+    */
+    function _mintWhenStaked() internal {
         //mint and send function here
     }
 
