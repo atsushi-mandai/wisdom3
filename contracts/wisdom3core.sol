@@ -131,7 +131,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     /**
     * @dev "createAnnotation" lets anyone to create an annotation.
     */
-    function createAnnotation(string memory _url, string memory _abstract, string memory _body, string memory _languageCode) public {
+    function createAnnotation(string memory _url, string memory _abst, string memory _body, string memory _languageCode) public {
         annotations.push(annotation(_url, _abst, _languageCode, _msgSender(), 0));
         uint annotationId = annotations.length - 1;
         annotationToBody[annotationId] = _body;
