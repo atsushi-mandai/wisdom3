@@ -133,7 +133,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
 
     function changeMintPace(uint8 _newMintPace) public onlyOwner {
         require(_newMintPace >= 80);
-        require(_newMintPace <= 80);
+        require(_newMintPace <= 120);
         mintPace = _newMintPace;
     }
 
