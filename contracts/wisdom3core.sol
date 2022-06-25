@@ -148,6 +148,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         annotations.push(Annotation(_url, _abst, _languageCode, _msgSender(), 0));
         uint annotationId = annotations.length - 1;
         annotationToBody[annotationId] = _body;
+        _mintByAnnotate();
         emit AnnotationCreated(annotationId, _url, _body, _languageCode);
     }
 
@@ -229,6 +230,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         stakes.push(Stake(_annotationId, _amount, _msgSender(), uint32(block.timestamp) + minimumStakePeriod));
         annotations[_annotationId].totalStake = annotations[_annotationId].totalStake + _amount;
         stakeExistance[_combineWithSender(_annotationId)] = true;
+        _mintWhenStaked();
     }
 
     /**
