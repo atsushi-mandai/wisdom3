@@ -36,16 +36,22 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     /**
     * @dev basicFee is used to determine the amount of WSDM paid
     * by the reader who wants to read the annotations.
-    * basicFee should be determined by a vote of governance token holders in the future
+    * basicFee should be determined by a vote of community in the future
     */
     uint basicFee = 1;
+
+    /**
+    * @dev mintPace defines the pace at which new WSDMs are mint.
+    * It is determined by community governance between 80% and 120%.
+    */
+    uint8 mintPace = 100;
 
     /**
     * @dev When the curator stakes his/her WSDM to an annotation,
     * it cannot be pulled out until the minimumStakePeriod has elapsed. 
     * This prevents malicious front-end providers from proactively staking to an annotation 
     * just before it is purchased by the reader.
-    * basicFee should be determined by a vote of governance token holders in the future
+    * basicFee should be determined by a vote of community in the future
     */
     uint32 minimumStakePeriod = 30 days;
     
@@ -59,6 +65,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     */
     struct annotation {
         string url;
+        string abst;
         string languageCode;
         address author;
         uint totalStake;
@@ -88,6 +95,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     */
     mapping(bytes32 => bool) internal stakeExistance;
 
+
     /*
     *
     *
@@ -112,6 +120,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
 
     /**
     * @dev changeBasicFee function lets contract owner to change the basicFee.
+    * changeMintPace function lets contract owner to change the mintPace.
     * changeMiniumStakePeriod function lets contract owner to change the minimumStakePeriod.
     * Owner of the contract will be transfered to the community in the future.
     * If few readers pay WSDM to read the annotations, the basic fee should be reduced to stimulate demand.
@@ -122,6 +131,12 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         basicFee = _newBasicFee;
     }  
 
+    function changeMintPace(uint8 _newMintPace) public onlyOwner {
+        require(_newMintPace >= 80);
+        require(_newMintPace <= 120);
+        mintPace = _newMintPace;
+    }
+
     function changeMinimumStakePeriod(uint32 _newMinimumStakePeriod) public onlyOwner {
         minimumStakePeriod = _newMinimumStakePeriod;
     }
@@ -129,8 +144,8 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     /**
     * @dev "createAnnotation" lets anyone to create an annotation.
     */
-    function createAnnotation(string memory _url, string memory _body, string memory _languageCode) public {
-        annotations.push(annotation(_url, _languageCode, _msgSender(), 0));
+    function createAnnotation(string memory _url, string memory _abst, string memory _body, string memory _languageCode) public {
+        annotations.push(annotation(_url, _abst, _languageCode, _msgSender(), 0));
         uint annotationId = annotations.length - 1;
         annotationToBody[annotationId] = _body;
         emit AnnotationCreated(annotationId, _url, _body, _languageCode);
@@ -214,6 +229,22 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         annotationStakes.push(annotationStake(_annotationId, _amount, _msgSender(), uint32(block.timestamp) + minimumStakePeriod));
         annotations[_annotationId].totalStake = annotations[_annotationId].totalStake + _amount;
         stakeExistance[_combineWithSender(_annotationId)] = true;
+    }
+
+    /**
+    * @dev _mintByAnnotate is called from within the createAnnotation function.
+    * It issues new WSDM and sends it to the annotation creator.
+    */
+    function _mintByAnnotate() internal {
+        //mint and send function here
+    }
+
+    /**
+    * @dev _mintForCurator is called from within the ***** function.
+    * It issues new WSDM and sends it to the curator when the annotation is purchased.
+    */
+    function _mintForCurator() internal {
+        //mint and send function here
     }
 
 }
