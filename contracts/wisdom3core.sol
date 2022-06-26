@@ -57,9 +57,18 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * it cannot be pulled out until the minimumStakePeriod has elapsed. 
     * This prevents malicious front-end providers from proactively staking to an annotation 
     * just before it is purchased by the reader.
-    * basicFee should be determined by a vote of community in the future
+    * It will be determined by a vote of community in the future
     */
     uint32 minimumStakePeriod = 30 days;
+
+    /**
+    * @dev distributionRatio determines how much of the WSDM payed by the reader of an annotation
+    * will be payed to each contributor. Sum of the ratios should be 100.
+    * distributionRatio[0] => Author
+    * distributionRatio[1] => Curator
+    * distributionRatio[2] => Broaker
+    */
+    uint8[3] public distributionRatio = [70,20,10];
     
     /**
     * @dev "annotation" is the basic structure of Wisdom3.
@@ -153,6 +162,13 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
 
     function changeMinimumStakePeriod(uint32 _newMinimumStakePeriod) public onlyOwner {
         minimumStakePeriod = _newMinimumStakePeriod;
+    }
+
+    function changeDistributionRatio(uint8 _author, uint8 _curator, uint8 _broaker) public onlyOwner {
+        require(_author + _curator + _broaker == 100);
+        distributionRatio[0] = _author;
+        distributionRatio[1] = _curator;
+        distributionRatio[2] = _broaker;
     }
 
     /**
@@ -283,9 +299,9 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
 
     /**
     * @dev _mintForCurator is called from within the ***** function.
-    * It issues new WSDM and sends it to the curator when the annotation is purchased.
+    * It issues new WSDM and sends it to the curators when the annotation is purchased.
     */
-    function _mintForCurator() internal {
+    function _mintForCurators() internal {
         //mint and send function here
     }
 
