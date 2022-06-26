@@ -68,6 +68,8 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * For languageCode, ISO 639-1 should be used. 
     * The body of each annotation is retained in an internal mapping so that 
     * it is only disclosed to the user who paid the WSDM for it.
+    * annotationPurchased records whether the sender has purchased the rights 
+    * to read the body of an annotation or not.
     */
     struct Annotation {
         string url;
@@ -78,6 +80,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     }
     Annotation[] public annotations;
     mapping(uint => string) internal annotationToBody;
+    mapping(bytes32 => bool) public annotationPurchased;
 
     /**
     * @dev Each annotation could be staked with WSDM.
@@ -211,6 +214,24 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     }
 
     /**
+    * @dev purchaseBody function is for readers to purchase the right to get the body of an annotation.
+    */
+
+    function purchaseBody(uint _annotationId) public {
+        //WSDM transfer function here.
+        annotationPurchased[_combineWithSender(_annotationId)] = true;
+    }
+
+    /**
+    * @dev getBody function is for readers to get the body of an annotation.
+    * The reader first needs to purchase the rights to read the body first.
+    */
+    function getBody(uint _annotationId) public view returns(string memory) {
+        require(annotationPurchased[_combineWithSender(_annotationId)] == true);
+        return annotationToBody[_annotationId];
+    }
+
+    /**
     * @dev getAnnotation function is for readers to get annotations.
     * reader could select how many annotations they want to read.
     function getAnnotations()
@@ -226,8 +247,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     */
 
     /**
-    * @dev checkStakeExistance lets curator check if he/she already has a stake to the annotation.
-    * If he/she already has one, addStake should be used, not createStake.
+    * @dev combineWithSender combines annotationId with sender's address and outputs unique bytes32.
     */
     function _combineWithSender(uint _annotationId) internal view returns(bytes32) {
         return keccak256(abi.encodePacked(_msgSender(), _annotationId));
