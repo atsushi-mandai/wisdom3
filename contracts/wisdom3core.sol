@@ -36,15 +36,21 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     /**
     * @dev basicFee is used to determine the amount of WSDM paid
     * by the reader who wants to read the annotations.
-    * basicFee should be determined by a vote of community in the future
+    * basicFee should be determined by a vote of community in the future.
     */
     uint basicFee = 1;
 
     /**
     * @dev mintPace defines the pace at which new WSDMs are mint.
-    * It is determined by community governance between 80% and 120%.
+    * It will be determined by community governance between 80% and 120% in the future.
     */
     uint8 mintPace = 100;
+
+    /**
+    * @dev minimumStake determines the minimum amount of WSDM that could be staked.
+    * It will be determined by community governance in the future.
+    */
+    uint8 minimumStake = 1 * decimals();
 
     /**
     * @dev When the curator stakes his/her WSDM to an annotation,
@@ -119,13 +125,14 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     */
 
     /**
-    * @dev changeBasicFee function lets contract owner to change the basicFee.
-    * changeMintPace function lets contract owner to change the mintPace.
-    * changeMiniumStakePeriod function lets contract owner to change the minimumStakePeriod.
+    * @dev These functions lets the owner of the contract change the basic variables of the project.
     * Owner of the contract will be transfered to the community in the future.
-    * If few readers pay WSDM to read the annotations, the basic fee should be reduced to stimulate demand.
-    * Conversely, if many readers pay WSDM to read the annotations, the community could conversely raise the 
-    * basicFee to encourage readers to buy more WDSM. 
+    * If there are high demands for annotations,
+    *  - basicFee should be lifted upwards to encourage readers to buy more WSDM
+    *  - mintPace should be slowed down to supply less WSDM and raise the price of WSDM.
+    * Conversely, if the demand for annotations are low,
+    *  - basicFee should be reduced to stimulate the demand for annotations.
+    *  - mintPace should be accelerated to supply more WSDM and stimulate the demand for annotations.
     */
     function changeBasicFee(uint _newBasicFee) public onlyOwner {
         basicFee = _newBasicFee;
@@ -135,6 +142,10 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         require(_newMintPace >= 80);
         require(_newMintPace <= 120);
         mintPace = _newMintPace;
+    }
+
+    function changeMinimumStake(uint8 _newMinimumStake) public onlyOwner {
+        minimumStake = _newMinimumStake;
     }
 
     function changeMinimumStakePeriod(uint32 _newMinimumStakePeriod) public onlyOwner {
@@ -167,6 +178,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     */
     function createStake(uint _annotationId, uint _amount) public {
         require(checkStakeExistance(_annotationId) == false);
+        require(_amount >= minimumStake);
         //WSDM transfer function to be written here.
         _createStake(_annotationId, _amount);
     }
