@@ -68,7 +68,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * just before it is purchased by the reader.
     * It will be determined by a vote of community in the future
     */
-    uint32 minimumStakePeriod = 30 days;
+    uint32 public minimumStakePeriod = 30 days;
 
     /**
     * @dev distributionRatio determines how much of the WSDM payed by the reader of an annotation
@@ -99,7 +99,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     }
     Annotation[] public annotations;
     mapping(uint => string) internal annotationToBody;
-    mapping(bytes32 => bool) public annotationPurchased;
+    mapping(bytes32 => bool) internal annotationPurchased;
 
     /**
     * @dev Each annotation could be staked with WSDM.
@@ -113,7 +113,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         address curatorAddress;
         uint32 withdrawAllowTime;
     }
-    Stake[] public stakes;
+    Stake[] internal stakes;
 
     /**
     * @dev stakeExistance is a mapping which manages whether 
