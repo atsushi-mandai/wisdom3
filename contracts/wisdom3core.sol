@@ -42,17 +42,24 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
 
     /**
     * @dev While the totalSupply of WSDM is below annotationMintCap,
-    * protocol rewards the author with annotationMintAmount everytime an annotation is created.
-    * Default annotationMintAmount is 1WSDM, and it should be determined by a vote of community in the future.
+    * the protocol rewards the author with annotationMintAmount of WSDM everytime an annotation is created.
+    * Default annotationMintAmount is 2WSDM, and it should be determined by a vote of community in the future.
     */
-    uint public annotationMintCap = 20000000 * 10**decimals();
-    uint public annotationMintAmount = 1 * 10**decimals();
+    uint public createAnnotationMintCap = 20000000 * 10**decimals();
+    uint public createAnnotationMintAmount = 2 * 10**decimals();
+
+    /**
+    * @dev Everytime a new stake is created to an annotation,
+    * the protocol rewards the author with (cap - totalSupply) / createStakeMintDenominator amount of WSDM.
+    * creatorStakeMintDenominator could not be changed.
+    */
+    uint public createStakeMintDenominator = 2 * 10**(decimals() + 10);
 
     /**
     * @dev minimumStake determines the minimum amount of WSDM that could be staked.
     * It will be determined by community governance
     */
-    uint minimumStake = 1;
+    uint public minimumStake = 10 ** decimals();
 
     /**
     * @dev When the curator stakes his/her WSDM to an annotation,
@@ -70,7 +77,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * distributionRatio[1] => Curator
     * distributionRatio[2] => Broaker
     */
-    uint8[3] public distributionRatio = [90,7,3];
+    uint8[3] public distributionRatio = [80,10,10];
     
     /**
     * @dev "annotation" is the basic structure of Wisdom3.
@@ -125,6 +132,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         uint authorStakes;
         uint authorStakedAmount;
         uint authorPurchased;
+        uint nextAvailableTime;
     }
     mapping(address => Author) public addressToAuthor;
 
@@ -180,8 +188,8 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         basicFee = _newBasicFee;
     }  
 
-    function changeAnnotationMintAmount(uint _newMintAmount) public onlyOwner {
-        annotationMintAmount = _newMintAmount;
+    function changeCreateAnnotationMintAmount(uint _newMintAmount) public onlyOwner {
+        createAnnotationMintAmount = _newMintAmount;
     }
 
     function changeMinimumStake(uint8 _newMinimumStake) public onlyOwner {
@@ -204,12 +212,14 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * @dev "createAnnotation" lets anyone to create an annotation.
     */
     function createAnnotation(string memory _url, string memory _abst, string memory _body, string memory _languageCode) public {
+        require(addressToAuthor[_msgSender()].nextAvailableTime < block.timestamp, "Annotator must wait 1 hour before creating another annotation.");
         annotations.push(Annotation(_url, _abst, _languageCode, _msgSender(), 0, block.timestamp));
         uint annotationId = annotations.length - 1;
         annotationToBody[annotationId] = _body;
         addressToAuthor[_msgSender()].authorAnnotations++;
-        if (totalSupply() <= annotationMintCap) {
-            _mintByAnnotate();
+        addressToAuthor[_msgSender()].nextAvailableTime = addressToAuthor[_msgSender()].nextAvailableTime + 1 hours;
+        if (totalSupply() <= createAnnotationMintCap) {
+            _mint(_msgSender(),createAnnotationMintAmount);
             emit AnnotationCreated(annotationId, _url, _body, _languageCode);
         } else {
             emit AnnotationCreated(annotationId, _url, _body, _languageCode);
@@ -301,12 +311,12 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * !!! better use SafeMath in this function but it doesn't work somehow.
     */
     function _createStake(uint _annotationId, uint _amount) private {
-        //WSDM transfer function to be written here.
+        transferFrom(_msgSender(), address(this), _amount);
         stakes.push(Stake(_annotationId, _amount, _msgSender(), uint32(block.timestamp) + minimumStakePeriod));
         annotations[_annotationId].totalStake = annotations[_annotationId].totalStake + _amount;
         stakeExistance[_combineWithSender(_annotationId)] = true;
         addressToAuthor[annotations[_annotationId].author].authorStakedAmount = addressToAuthor[annotations[_annotationId].author].authorStakedAmount + _amount;
-        _mintWhenStaked();
+        _mint(annotations[_annotationId].author, (cap() - totalSupply()) / createStakeMintDenominator);
     }
 
     /**
@@ -314,7 +324,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * !!! better use SafeMath in this function but it doesn't work somehow.
     */
     function _addStake(uint _stakeId, uint _amount) private {
-        //WSDM transfer function to be written here.
+        transferFrom(_msgSender(), address(this), _amount);
         uint currentStake = stakes[_stakeId].amount;
         uint annotationId = stakes[_stakeId].annotationId;
         annotations[annotationId].totalStake = annotations[annotationId].totalStake = annotations[annotationId].totalStake = annotations[annotationId].totalStake + _amount;
@@ -334,14 +344,6 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         addressToAuthor[annotations[annotationId].author].authorStakedAmount = addressToAuthor[annotations[annotationId].author].authorStakedAmount - currentStake;
         stakes[_stakeId].amount = 0;
         //WSDM transfer function to be written here.
-    }
-
-    /**
-    * @dev _mintByAnnotate is called from within the createAnnotation function.
-    * It issues new WSDM and sends it to the annotation creator.
-    */
-    function _mintByAnnotate() public view returns(uint) {
-        //uint ammount = 
     }
 
     /**
