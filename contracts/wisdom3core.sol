@@ -42,7 +42,8 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
 
     /**
     * @dev While the totalSupply of WSDM is below annotationMintCap,
-    * the protocol rewards the author with annotationMintAmount everytime an annotation is created.
+    * protocol rewards the author with annotationMintAmount everytime an annotation is created.
+    * Default annotationMintAmount is 1WSDM, and it should be determined by a vote of community in the future.
     */
     uint public annotationMintCap = 20000000 * 10**decimals();
     uint public annotationMintAmount = 1 * 10**decimals();
