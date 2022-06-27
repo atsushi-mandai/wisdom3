@@ -86,6 +86,8 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         string languageCode;
         address author;
         uint totalStake;
+        uint goodFlag;
+        uint badFlag;
     }
     Annotation[] public annotations;
     mapping(uint => string) internal annotationToBody;
@@ -113,6 +115,16 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     */
     mapping(bytes32 => bool) internal stakeExistance;
 
+    /**
+    * @dev Profile of the Author.
+    */
+    struct Author {
+        address authorAddress;
+        uint authorAnnotations;
+        uint authorStaked;
+        uint authorPurchased;
+    }
+    mapping(address => Author) public addressToAuthor;
 
     /*
     *
@@ -176,7 +188,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * @dev "createAnnotation" lets anyone to create an annotation.
     */
     function createAnnotation(string memory _url, string memory _abst, string memory _body, string memory _languageCode) public {
-        annotations.push(Annotation(_url, _abst, _languageCode, _msgSender(), 0));
+        annotations.push(Annotation(_url, _abst, _languageCode, _msgSender(), 0, 0, 0));
         uint annotationId = annotations.length - 1;
         annotationToBody[annotationId] = _body;
         _mintByAnnotate();
@@ -227,6 +239,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     function purchaseBody(uint _annotationId) public {
         //WSDM transfer function here.
         annotationPurchased[_combineWithSender(_annotationId)] = true;
+        _mintForCurators();
     }
 
     /**
