@@ -126,6 +126,16 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     }
     mapping(address => Author) public addressToAuthor;
 
+    /**
+    * @dev Review of the annotation by the purchaser.
+    */
+    struct Review {
+        uint annotationId;
+        string review;
+        address reviewer;
+    }
+    Review[] public reviews;
+
     /*
     *
     *
@@ -139,7 +149,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         _;
     }
 
-    modifier purchasedOnly(uint _annotationId) {
+    modifier onlyPurchaser(uint _annotationId) {
         require(annotationPurchased[_combineWithSender(_annotationId)] == true);
         _;
     }
@@ -253,8 +263,15 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * @dev getBody function is for readers to get the body of an annotation.
     * The reader first needs to purchase the rights to read the body first.
     */
-    function getBody(uint _annotationId) public view purchasedOnly(_annotationId) returns(string memory) {
+    function getBody(uint _annotationId) public view onlyPurchaser(_annotationId) returns(string memory) {
         return annotationToBody[_annotationId];
+    }
+
+    /**
+    * @dev addReview allows purchaser of an annotation to add a review to it.
+    */
+    function addReview(uint _annotationId, string memory _review) public onlyPurchaser(_annotationId) {
+        reviews.push(Review(_annotationId, _review, _msgSender()));
     }
 
 
