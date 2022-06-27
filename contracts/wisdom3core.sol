@@ -53,7 +53,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * the protocol rewards the author with (cap - totalSupply) / createStakeMintDenominator amount of WSDM.
     * creatorStakeMintDenominator could not be changed.
     */
-    uint public createStakeMintDenominator = 2 * 10**(decimals() + 10);
+    uint public createStakeMintDenominator = 2 * 10**10;
 
     /**
     * @dev minimumStake determines the minimum amount of WSDM that could be staked.
@@ -344,15 +344,6 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         addressToAuthor[annotations[annotationId].author].authorStakedAmount = addressToAuthor[annotations[annotationId].author].authorStakedAmount - currentStake;
         stakes[_stakeId].amount = 0;
         //WSDM transfer function to be written here.
-    }
-
-    /**
-    * @dev _mintWhenStaked is called from within the createStake function.
-    * It issues new WSDM and sends it to the author of the annotation.
-    */
-    function _mintWhenStaked() public view returns(uint) {
-     //   uint amount = mintPace1;
-     //   return amount;
     }
 
     /**
