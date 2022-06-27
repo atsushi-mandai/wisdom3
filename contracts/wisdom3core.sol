@@ -38,19 +38,20 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * by the reader who wants to read the annotations.
     * basicFee should be determined by a vote of community in the future.
     */
-    uint basicFee = 1;
+    uint public basicFee = 1;
 
     /**
-    * @dev mintPace defines the pace at which new WSDMs are mint.
-    * It will be determined by community governance between 80% and 120% in the future.
+    * @dev While the totalSupply of WSDM is below annotationMintCap,
+    * the protocol rewards the author with annotationMintAmount everytime an annotation is created.
     */
-    uint8 mintPace = 100;
+    uint public annotationMintCap = 20000000 * 10**decimals();
+    uint public annotationMintAmount = 1 * 10**decimals();
 
     /**
     * @dev minimumStake determines the minimum amount of WSDM that could be staked.
-    * It will be determined by community governance in the future.
+    * It will be determined by community governance
     */
-    uint8 minimumStake = 1 * decimals();
+    uint minimumStake = 1;
 
     /**
     * @dev When the curator stakes his/her WSDM to an annotation,
@@ -178,10 +179,8 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         basicFee = _newBasicFee;
     }  
 
-    function changeMintPace(uint8 _newMintPace) public onlyOwner {
-        require(_newMintPace >= 80);
-        require(_newMintPace <= 120);
-        mintPace = _newMintPace;
+    function changeAnnotationMintAmount(uint _newMintAmount) public onlyOwner {
+        annotationMintAmount = _newMintAmount;
     }
 
     function changeMinimumStake(uint8 _newMinimumStake) public onlyOwner {
@@ -208,8 +207,12 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         uint annotationId = annotations.length - 1;
         annotationToBody[annotationId] = _body;
         addressToAuthor[_msgSender()].authorAnnotations++;
-        _mintByAnnotate();
-        emit AnnotationCreated(annotationId, _url, _body, _languageCode);
+        if (totalSupply() <= annotationMintCap) {
+            _mintByAnnotate();
+            emit AnnotationCreated(annotationId, _url, _body, _languageCode);
+        } else {
+            emit AnnotationCreated(annotationId, _url, _body, _languageCode);
+        }
     }
 
     /**
@@ -336,24 +339,26 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * @dev _mintByAnnotate is called from within the createAnnotation function.
     * It issues new WSDM and sends it to the annotation creator.
     */
-    function _mintByAnnotate() internal {
-        //mint and send function here
+    function _mintByAnnotate() public view returns(uint) {
+        //uint ammount = 
     }
 
     /**
     * @dev _mintWhenStaked is called from within the createStake function.
     * It issues new WSDM and sends it to the author of the annotation.
     */
-    function _mintWhenStaked() internal {
-        //mint and send function here
+    function _mintWhenStaked() public view returns(uint) {
+     //   uint amount = mintPace1;
+     //   return amount;
     }
 
     /**
     * @dev _mintForCurator is called from within the ***** function.
     * It issues new WSDM and sends it to the curators when the annotation is purchased.
     */
-    function _mintForCurators() internal {
-        //mint and send function here
+    function _mintForCurators() public view returns(uint) {
+     //   uint amount = (cap() - totalSupply()) * mintPace;
+     //   return amount;
     }
 
 }
