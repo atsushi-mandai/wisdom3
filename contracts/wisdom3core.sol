@@ -38,7 +38,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * by the reader who wants to read the annotations.
     * basicFee should be determined by a vote of community in the future.
     */
-    uint public basicFee = 1;
+    uint public basicFee = 2 * 10**(decimals()-1);
 
     /**
     * @dev While the totalSupply of WSDM is below annotationMintCap,
@@ -126,15 +126,17 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     /**
     * @dev Profile of the Author.
     */
-    struct Author {
-        address authorAddress;
-        uint authorAnnotations;
-        uint authorStakes;
-        uint authorStakedAmount;
-        uint authorPurchased;
+    struct Profile {
+        address profileAddress;
+        uint annotations;
+        uint stakedAnnotations;
+        uint stakedAmount;
+        uint stakingAmount;
+        uint sold;
+        uint purchased;
         uint nextAvailableTime;
     }
-    mapping(address => Author) public addressToAuthor;
+    mapping(address => Profile) public addressToProfile;
 
     /**
     * @dev Review of the annotation by the purchaser.
@@ -193,16 +195,17 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     }
 
     function changeMinimumStake(uint8 _newMinimumStake) public onlyOwner {
+        require(_newMinimumStake > 10**decimals());
         minimumStake = _newMinimumStake;
     }
 
     function changeMinimumStakePeriod(uint32 _newMinimumStakePeriod) public onlyOwner {
+        require(_newMinimumStakePeriod > 1 days);
         minimumStakePeriod = _newMinimumStakePeriod;
     }
 
     function changeDistributionRatio(uint8 _author, uint8 _curator, uint8 _broaker) public onlyOwner {
         require(_author + _curator + _broaker == 100);
-        //maybe require _author > 80 or something like that?
         distributionRatio[0] = _author;
         distributionRatio[1] = _curator;
         distributionRatio[2] = _broaker;
@@ -212,12 +215,12 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * @dev "createAnnotation" lets anyone to create an annotation.
     */
     function createAnnotation(string memory _url, string memory _abst, string memory _body, string memory _languageCode) public {
-        require(addressToAuthor[_msgSender()].nextAvailableTime < block.timestamp, "Annotator must wait 1 hour before creating another annotation.");
+        require(addressToProfile[_msgSender()].nextAvailableTime < block.timestamp, "Annotator must wait 1 hour before creating another annotation.");
         annotations.push(Annotation(_url, _abst, _languageCode, _msgSender(), 0, block.timestamp));
         uint annotationId = annotations.length - 1;
         annotationToBody[annotationId] = _body;
-        addressToAuthor[_msgSender()].authorAnnotations++;
-        addressToAuthor[_msgSender()].nextAvailableTime = addressToAuthor[_msgSender()].nextAvailableTime + 1 hours;
+        addressToProfile[_msgSender()].annotations++;
+        addressToProfile[_msgSender()].nextAvailableTime = addressToProfile[_msgSender()].nextAvailableTime + 1 hours;
         if (totalSupply() <= createAnnotationMintCap) {
             _mint(_msgSender(),createAnnotationMintAmount);
             emit AnnotationCreated(annotationId, _url, _body, _languageCode);
@@ -242,6 +245,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     function createStake(uint _annotationId, uint _amount) public {
         require(checkStakeExistance(_annotationId) == false);
         require(_amount >= minimumStake);
+        _transfer(_msgSender(), address(this), _amount);
         _createStake(_annotationId, _amount);
     }
 
@@ -250,6 +254,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * !!! better use SafeMath in this function but it doesn't work somehow.
     */
     function addStake(uint _stakeId, uint _amount) public onlyStakeOwner(_stakeId) {
+        _transfer(_msgSender(), address(this), _amount);
         _addStake(_stakeId, _amount);
     }
 
@@ -260,7 +265,11 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     */
     function withdrawStake(uint _stakeId) public onlyStakeOwner(_stakeId) {
         require(uint32(block.timestamp) > stakes[_stakeId].withdrawAllowTime);
-        _withdrawStake(_stakeId);
+        uint currentStake = stakes[_stakeId].amount;
+        require(currentStake > 0);
+        _withdrawStake(_stakeId, currentStake);
+        stakes[_stakeId].amount = 0;
+        _transfer(address(this), _msgSender(), currentStake);
     }
 
     /**
@@ -270,7 +279,8 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     function purchaseBody(uint _annotationId) public {
         //WSDM transfer function here.
         annotationPurchased[_combineWithSender(_annotationId)] = true;
-        addressToAuthor[annotations[_annotationId].author].authorPurchased++;
+        addressToProfile[annotations[_annotationId].author].sold++;
+        addressToProfile[_msgSender()].purchased++;
         _mintForCurators();
     }
 
@@ -311,11 +321,12 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * !!! better use SafeMath in this function but it doesn't work somehow.
     */
     function _createStake(uint _annotationId, uint _amount) private {
-        transferFrom(_msgSender(), address(this), _amount);
         stakes.push(Stake(_annotationId, _amount, _msgSender(), uint32(block.timestamp) + minimumStakePeriod));
         annotations[_annotationId].totalStake = annotations[_annotationId].totalStake + _amount;
         stakeExistance[_combineWithSender(_annotationId)] = true;
-        addressToAuthor[annotations[_annotationId].author].authorStakedAmount = addressToAuthor[annotations[_annotationId].author].authorStakedAmount + _amount;
+        addressToProfile[annotations[_annotationId].author].stakedAnnotations++;
+        addressToProfile[annotations[_annotationId].author].stakedAmount = addressToProfile[annotations[_annotationId].author].stakedAmount + _amount;
+        addressToProfile[_msgSender()].stakingAmount = addressToProfile[_msgSender()].stakingAmount + _amount;
         _mint(annotations[_annotationId].author, (cap() - totalSupply()) / createStakeMintDenominator);
     }
 
@@ -324,26 +335,24 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * !!! better use SafeMath in this function but it doesn't work somehow.
     */
     function _addStake(uint _stakeId, uint _amount) private {
-        transferFrom(_msgSender(), address(this), _amount);
         uint currentStake = stakes[_stakeId].amount;
         uint annotationId = stakes[_stakeId].annotationId;
         annotations[annotationId].totalStake = annotations[annotationId].totalStake = annotations[annotationId].totalStake = annotations[annotationId].totalStake + _amount;
         stakes[_stakeId].amount = currentStake + _amount;
         stakes[_stakeId].withdrawAllowTime = stakes[_stakeId].withdrawAllowTime + minimumStakePeriod;
-        addressToAuthor[annotations[annotationId].author].authorStakedAmount = annotations[annotationId].totalStake = annotations[annotationId].totalStake + _amount;
+        addressToProfile[annotations[annotationId].author].stakedAmount = addressToProfile[annotations[annotationId].author].stakedAmount + _amount;
+        addressToProfile[_msgSender()].stakingAmount = addressToProfile[_msgSender()].stakingAmount + _amount;
     }
 
     /**
     * @dev _withdrawStake is a private function to be called from withdrawStake.
     * !!! better use SafeMath in this function but it doesn't work somehow.
     */
-    function _withdrawStake(uint _stakeId) private {
-        uint currentStake = stakes[_stakeId].amount;
+    function _withdrawStake(uint _stakeId, uint _currentStake) private {
         uint annotationId = stakes[_stakeId].annotationId;
-        annotations[annotationId].totalStake = annotations[annotationId].totalStake - currentStake;
-        addressToAuthor[annotations[annotationId].author].authorStakedAmount = addressToAuthor[annotations[annotationId].author].authorStakedAmount - currentStake;
-        stakes[_stakeId].amount = 0;
-        //WSDM transfer function to be written here.
+        annotations[annotationId].totalStake = annotations[annotationId].totalStake - _currentStake;
+        addressToProfile[annotations[annotationId].author].stakedAmount = addressToProfile[annotations[annotationId].author].stakedAmount - _currentStake;
+        addressToProfile[_msgSender()].stakingAmount = addressToProfile[_msgSender()].stakingAmount - _currentStake;
     }
 
     /**
