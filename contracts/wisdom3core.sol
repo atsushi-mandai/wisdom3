@@ -68,7 +68,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * distributionRatio[1] => Curator
     * distributionRatio[2] => Broaker
     */
-    uint8[3] public distributionRatio = [70,20,10];
+    uint8[3] public distributionRatio = [90,7,3];
     
     /**
     * @dev "annotation" is the basic structure of Wisdom3.
@@ -166,6 +166,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
 
     function changeDistributionRatio(uint8 _author, uint8 _curator, uint8 _broaker) public onlyOwner {
         require(_author + _curator + _broaker == 100);
+        //maybe require _author > 80 or something like that?
         distributionRatio[0] = _author;
         distributionRatio[1] = _curator;
         distributionRatio[2] = _broaker;
@@ -198,7 +199,6 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     function createStake(uint _annotationId, uint _amount) public {
         require(checkStakeExistance(_annotationId) == false);
         require(_amount >= minimumStake);
-        //WSDM transfer function to be written here.
         _createStake(_annotationId, _amount);
     }
 
@@ -207,12 +207,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * !!! better use SafeMath in this function but it doesn't work somehow.
     */
     function addStake(uint _stakeId, uint _amount) public onlyStakeOwner(_stakeId) {
-        //WSDM transfer function to be written here.
-        uint currentStake = stakes[_stakeId].amount;
-        uint annotationId = stakes[_stakeId].annotationId;
-        annotations[annotationId].totalStake = annotations[annotationId].totalStake + _amount;
-        stakes[_stakeId].amount = currentStake + _amount;
-        stakes[_stakeId].withdrawAllowTime = stakes[_stakeId].withdrawAllowTime + minimumStakePeriod;
+        _addStake(_stakeId, _amount);
     }
 
     /**
@@ -222,11 +217,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     */
     function withdrawStake(uint _stakeId) public onlyStakeOwner(_stakeId) {
         require(uint32(block.timestamp) > stakes[_stakeId].withdrawAllowTime);
-        uint currentStake = stakes[_stakeId].amount;
-        uint annotationId = stakes[_stakeId].annotationId;
-        annotations[annotationId].totalStake = annotations[annotationId].totalStake - currentStake;
-        stakes[_stakeId].amount = currentStake;
-        //WSDM transfer function to be written here.
+        _withdrawStake(_stakeId);
     }
 
     /**
@@ -247,11 +238,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         return annotationToBody[_annotationId];
     }
 
-    /**
-    * @dev getAnnotation function is for readers to get annotations.
-    * reader could select how many annotations they want to read.
-    function getAnnotations()
-    */
+    
 
 
     /**
@@ -275,10 +262,36 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * !!! better use SafeMath in this function but it doesn't work somehow.
     */
     function _createStake(uint _annotationId, uint _amount) private {
+        //WSDM transfer function to be written here.
         stakes.push(Stake(_annotationId, _amount, _msgSender(), uint32(block.timestamp) + minimumStakePeriod));
         annotations[_annotationId].totalStake = annotations[_annotationId].totalStake + _amount;
         stakeExistance[_combineWithSender(_annotationId)] = true;
         _mintWhenStaked();
+    }
+
+    /**
+    * @dev _addStake is a private function to be called from addStake.
+    * !!! better use SafeMath in this function but it doesn't work somehow.
+    */
+    function _addStake(uint _stakeId, uint _amount) private {
+        //WSDM transfer function to be written here.
+        uint currentStake = stakes[_stakeId].amount;
+        uint annotationId = stakes[_stakeId].annotationId;
+        annotations[annotationId].totalStake = annotations[annotationId].totalStake + _amount;
+        stakes[_stakeId].amount = currentStake + _amount;
+        stakes[_stakeId].withdrawAllowTime = stakes[_stakeId].withdrawAllowTime + minimumStakePeriod;
+    }
+
+    /**
+    * @dev _withdrawStake is a private function to be called from withdrawStake.
+    * !!! better use SafeMath in this function but it doesn't work somehow.
+    */
+    function _withdrawStake(uint _stakeId) private {
+        uint currentStake = stakes[_stakeId].amount;
+        uint annotationId = stakes[_stakeId].annotationId;
+        annotations[annotationId].totalStake = annotations[annotationId].totalStake - currentStake;
+        stakes[_stakeId].amount = currentStake;
+        //WSDM transfer function to be written here.
     }
 
     /**
