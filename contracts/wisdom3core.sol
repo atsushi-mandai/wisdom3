@@ -88,6 +88,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         uint totalStake;
         uint goodFlag;
         uint badFlag;
+        uint createdAt;
     }
     Annotation[] public annotations;
     mapping(uint => string) internal annotationToBody;
@@ -121,7 +122,8 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     struct Author {
         address authorAddress;
         uint authorAnnotations;
-        uint authorStaked;
+        uint authorStakes;
+        uint authorStakedAmount;
         uint authorPurchased;
     }
     mapping(address => Author) public addressToAuthor;
@@ -188,9 +190,10 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * @dev "createAnnotation" lets anyone to create an annotation.
     */
     function createAnnotation(string memory _url, string memory _abst, string memory _body, string memory _languageCode) public {
-        annotations.push(Annotation(_url, _abst, _languageCode, _msgSender(), 0, 0, 0));
+        annotations.push(Annotation(_url, _abst, _languageCode, _msgSender(), 0, 0, 0, block.timestamp));
         uint annotationId = annotations.length - 1;
         annotationToBody[annotationId] = _body;
+        addressToAuthor[_msgSender()].authorAnnotations++;
         _mintByAnnotate();
         emit AnnotationCreated(annotationId, _url, _body, _languageCode);
     }
@@ -239,6 +242,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     function purchaseBody(uint _annotationId) public {
         //WSDM transfer function here.
         annotationPurchased[_combineWithSender(_annotationId)] = true;
+        addressToAuthor[annotations[_annotationId].author].authorPurchased++;
         _mintForCurators();
     }
 
@@ -279,6 +283,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         stakes.push(Stake(_annotationId, _amount, _msgSender(), uint32(block.timestamp) + minimumStakePeriod));
         annotations[_annotationId].totalStake = annotations[_annotationId].totalStake + _amount;
         stakeExistance[_combineWithSender(_annotationId)] = true;
+        addressToAuthor[annotations[_annotationId].author].authorStakedAmount = addressToAuthor[annotations[_annotationId].author].authorStakedAmount + _amount;
         _mintWhenStaked();
     }
 
@@ -290,9 +295,10 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         //WSDM transfer function to be written here.
         uint currentStake = stakes[_stakeId].amount;
         uint annotationId = stakes[_stakeId].annotationId;
-        annotations[annotationId].totalStake = annotations[annotationId].totalStake + _amount;
+        annotations[annotationId].totalStake = annotations[annotationId].totalStake = annotations[annotationId].totalStake = annotations[annotationId].totalStake + _amount;
         stakes[_stakeId].amount = currentStake + _amount;
         stakes[_stakeId].withdrawAllowTime = stakes[_stakeId].withdrawAllowTime + minimumStakePeriod;
+        addressToAuthor[annotations[annotationId].author].authorStakedAmount = annotations[annotationId].totalStake = annotations[annotationId].totalStake + _amount;
     }
 
     /**
@@ -303,7 +309,8 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         uint currentStake = stakes[_stakeId].amount;
         uint annotationId = stakes[_stakeId].annotationId;
         annotations[annotationId].totalStake = annotations[annotationId].totalStake - currentStake;
-        stakes[_stakeId].amount = currentStake;
+        addressToAuthor[annotations[annotationId].author].authorStakedAmount = addressToAuthor[annotations[annotationId].author].authorStakedAmount - currentStake;
+        stakes[_stakeId].amount = 0;
         //WSDM transfer function to be written here.
     }
 
