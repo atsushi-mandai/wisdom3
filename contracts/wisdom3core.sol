@@ -132,6 +132,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     struct Review {
         uint annotationId;
         string review;
+        bool like;
         address reviewer;
     }
     Review[] public reviews;
@@ -270,8 +271,8 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     /**
     * @dev addReview allows purchaser of an annotation to add a review to it.
     */
-    function addReview(uint _annotationId, string memory _review) public onlyPurchaser(_annotationId) {
-        reviews.push(Review(_annotationId, _review, _msgSender()));
+    function addReview(uint _annotationId, string memory _review, bool _like) public onlyPurchaser(_annotationId) {
+        reviews.push(Review(_annotationId, _review, _like, _msgSender()));
     }
 
 
