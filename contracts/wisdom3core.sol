@@ -86,8 +86,6 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         string languageCode;
         address author;
         uint totalStake;
-        uint goodFlag;
-        uint badFlag;
         uint createdAt;
     }
     Annotation[] public annotations;
@@ -141,6 +139,11 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
         _;
     }
 
+    modifier purchasedOnly(uint _annotationId) {
+        require(annotationPurchased[_combineWithSender(_annotationId)] == true);
+        _;
+    }
+
 
     /**
     *
@@ -190,7 +193,7 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * @dev "createAnnotation" lets anyone to create an annotation.
     */
     function createAnnotation(string memory _url, string memory _abst, string memory _body, string memory _languageCode) public {
-        annotations.push(Annotation(_url, _abst, _languageCode, _msgSender(), 0, 0, 0, block.timestamp));
+        annotations.push(Annotation(_url, _abst, _languageCode, _msgSender(), 0, block.timestamp));
         uint annotationId = annotations.length - 1;
         annotationToBody[annotationId] = _body;
         addressToAuthor[_msgSender()].authorAnnotations++;
@@ -250,12 +253,9 @@ contract Wisdom3Core is Wisdom3Token, Ownable {
     * @dev getBody function is for readers to get the body of an annotation.
     * The reader first needs to purchase the rights to read the body first.
     */
-    function getBody(uint _annotationId) public view returns(string memory) {
-        require(annotationPurchased[_combineWithSender(_annotationId)] == true);
+    function getBody(uint _annotationId) public view purchasedOnly(_annotationId) returns(string memory) {
         return annotationToBody[_annotationId];
     }
-
-    
 
 
     /**
